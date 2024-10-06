@@ -1,5 +1,5 @@
 import json 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import pika
 import os
 
@@ -11,6 +11,11 @@ rabbitmq_port = int(os.environ.get('RABBITMQ_PORT', 15672))
 rabbitmq_user = os.environ.get('RABBITMQ_USER', 'guest')
 rabbitmq_pass = os.environ.get('RABBITMQ_PASS', 'guest')
 rabbitmq_queue = os.environ.get('RABBITMQ_QUEUE', 'minio_events')
+
+@app.route('/')
+def home():
+    return "MinIO-RabbitMQ Bridge is running!", 200
+
 
 @app.route('/events', methods=['POST'])
 def receive_event():
@@ -25,7 +30,7 @@ def receive_event():
            )
        )
     channel = connection.channel()
-       
+
        # Declare the queue
     channel.queue_declare(queue=rabbitmq_queue, durable=True)
        
@@ -39,7 +44,7 @@ def receive_event():
        
     connection.close()
 
-    return "Event received and sent to RabbitMQ", 200
+    return jsonify({"status": "Event received"}), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
